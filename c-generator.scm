@@ -1,15 +1,15 @@
 (require scheme)
 
-(define (interleave xs sep)
+(define (interleave-str xs sep)
   (cond ((null? xs) "")
         ((null? (cdr xs)) (car xs))
-        (else (string-append (string-append (car xs) sep) (interleave (cdr xs) sep)))))
+        (else (string-append (string-append (car xs) sep) (interleave-str (cdr xs) sep)))))
 (define (flatten-str str)
-  (interleave str ""))
+  (interleave-str str ""))
 
 
 (define (c-program . statements)
-  (string-append (interleave statements ";\n") ";"))
+  (string-append (interleave-str statements ";\n") ";"))
 
 (define (c-block . statements)
   (string-append "{\n" (apply c-program statements) "\n}"))
@@ -30,7 +30,7 @@
 (define (c-#define-obj name (val ""))
   (string-append "#define " name " " val))
 (define (c-#define-fun name args expans)
-  (string-append "#define " name "(" (interleave args ", ") ") " expans))
+  (string-append "#define " name "(" (interleave-str args ", ") ") " expans))
 (define (c-#undef name)
   (string-append "#undef " name))
 
@@ -40,10 +40,10 @@
   (string-append a "##" b))
 
 (define (c-fun-decl type name params)
-  (string-append type " " name " (" (interleave params ", ") ")"))
+  (string-append type " " name " (" (interleave-str params ", ") ")"))
 (define (c-fun-defn type name params . body)
-  (string-append type " " name " (" (interleave params ", ") ")\n{\n"
-                 (interleave body ";\n") ";\n}"))
+  (string-append type " " name " (" (interleave-str params ", ") ")\n{\n"
+                 (interleave-str body ";\n") ";\n}"))
 
 (define (c-var-decl type name)
   (string-append type " " name))
@@ -51,14 +51,14 @@
 (define (c-struct-decl name . members)
   (string-append "struct " name "\n{\n" (flatten-str (map (lambda (str) (string-append str ";\n")) members)) "}"))
 (define (c-enum-decl name . constants)
-  (string-append "enum " name " { " (interleave constants ", ") "}"))
+  (string-append "enum " name " { " (interleave-str constants ", ") "}"))
 (define (c-union-decl name . members)
   (string-append "union " name "\n{\n" (flatten-str (map (lambda (str) (string-append str ";\n")) members)) "}"))
 
 (define (c-typedef-var orig new)
   (string-append "typedef " orig " " new))
 (define (c-typedef-fn ret name . args)
-  (string-append "typedef " ret " " name "(" (interleave args ", ") ")"))
+  (string-append "typedef " ret " " name "(" (interleave-str args ", ") ")"))
 (define (c-extern decl)
   (string-append "extern " decl))
 (define (c-static type)
@@ -89,9 +89,9 @@
   (string-append name "[" dim "]"))
 
 (define (c-struct-init . members)
-  (string-append "{ " (interleave members ", ") " }"))
+  (string-append "{ " (interleave-str members ", ") " }"))
 (define (c-struct-named-init . members)
-  (string-append "{ " (interleave (map 
+  (string-append "{ " (interleave-str (map 
                                    (lambda (str) (string-append "." (substring str 1 (- (string-length str) 1))))
                                    members) ", ")
                  " }"))
@@ -99,7 +99,7 @@
 (define (c-= place val)
   (string-append "(" place " = " val ")"))
 (define (c-call fn . args)
-  (string-append fn "(" (interleave args ", ") ")"))
+  (string-append fn "(" (interleave-str args ", ") ")"))
 (define (c-subscript array index)
   (string-append "(" array "[" index "])"))
 (define (c-deref ptr)
@@ -199,9 +199,9 @@
   (string-append "if (" pred ")\n" then (if (eq? (string-ref then 0) #\{) "" ";")
                  (if els (string-append "\nelse\n" els (if (eq? (string-ref els 0) #\{) "" ";")) "")))
 (define (c-switch expr #:default (default "") . cases)
-  (string-append "switch (" expr ")\n{\n" (interleave (map (lambda (cs) 
+  (string-append "switch (" expr ")\n{\n" (interleave-str (map (lambda (cs) 
                                                              (string-append "case " (car cs) ":\n" 
-                                                                            (interleave (cdr cs) ";\n") ";")) 
+                                                                            (interleave-str (cdr cs) ";\n") ";")) 
                                                            cases) "\n") "\ndefault:\n" default "\n}"))
 
 (define (run-tests)
